@@ -1,0 +1,16 @@
+{
+  "name": "safe-environment-loader",
+  "version": "0.1.0",
+  "description": "Safe environment loader",
+  "license": "MIT",
+  "author": "Tomas Szabo <tomas.szabo@deftomat.com>",
+  "repository": "github:deftomat/safe-environment-loader",
+  "homepage": "https://github.com/deftomat/safe-environment-loader",
+  "keywords": [
+    "environment",
+    "loader",
+    "webpack",
+    "safe"
+  ],
+  "main": "./index.js"
+}
