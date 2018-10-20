@@ -1,6 +1,6 @@
 {
   "name": "safe-environment-loader",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Safe environment loader",
   "license": "MIT",
   "author": "Tomas Szabo <tomas.szabo@deftomat.com>",
@@ -12,5 +12,12 @@
     "webpack",
     "safe"
   ],
-  "main": "./index.js"
+  "main": "./index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^23.6.0",
+    "loader-utils": "^1.1.0"
+  }
 }

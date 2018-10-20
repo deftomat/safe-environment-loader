@@ -1,5 +1,12 @@
 # Safe environment loader
 
+Webpack loader which replaces `process.env.<ANYTHING>` with environment value.
+Missing environment values will cause a build error.
+
+## Why?
+
+Because you want to be sure that you provide all environment values required by your application.
+
 ## Installation
 
 ```
@@ -13,10 +20,56 @@ Add rule to your webpack config:
 ```js
 {
   enforce: 'post',
-  test: /environment\.ts/,
+  test: /environment\.js/,
+  loader: 'safe-environment-loader',
+}
+```
+
+Create `environment.js`:
+
+```js
+export default {
+  buildId: process.env.BUILD_ID,
+  stage: process.env.STAGE
+};
+```
+
+Build your application: `STAGE=e2e; BUILD_ID=123 webpack -p`.
+
+A missing values required by `environment.js` will cause build errors.
+
+## Loader options
+
+You can provide a default values, which will be used when environment value is missing:
+
+```js
+{
+  enforce: 'post',
+  test: /environment\.js/,
   loader: 'safe-environment-loader',
   options: {
-    defaults: { BUILD_ID: 123 }
+    defaults: {
+      BUILD_ID: Math.random()
+    }
   }
 }
 ```
+
+**CAUTION**: `process.env.NODE_ENV` is ignored as webpack (since v4) is replacing it by default.
+
+## Advanced usage
+
+The following _run_ script will load environment from `.env.<stage>` file.
+
+```
+#!/usr/bin/env bash
+
+while read assignment; do
+  export $assignment
+done < $(dirname "$0")/.env.$1
+
+shift 1
+"$@"
+```
+
+For example, `./run.sh local webpack -p` will load environment form `.env.local` and then run `webpack -p`.
