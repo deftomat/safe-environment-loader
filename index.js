@@ -6,18 +6,22 @@ const envVariable = /process\.env\.([a-z0-9_]*)/gi;
 function loader(source) {
   this.cacheable(false);
 
-  const options = loaderUtils.getOptions(this);
-  const defaults = options ? options.defaults || {} : {};
+  const options = loaderUtils.getOptions(this) || {};
+  const { defaults = {}, filter = () => true } = options;
+
   const match = source.replace(commentedCode, '').match(envVariable) || [];
 
   return match
     .filter(item => item !== 'process.env.NODE_ENV')
     .map(item => {
-      const key = item.replace('process.env.', '');
-      const value = process.env[key] || defaults[key];
+      const name = item.replace('process.env.', '');
+      const value = process.env[name] || defaults[name];
+
+      // Skip substitution when filter function returns false.
+      if (filter(name, value) === false) return { item, value: item };
 
       if (value === undefined) {
-        throw Error(`Environment variable "${key}" is missing!`);
+        throw Error(`Environment variable "${name}" is missing!`);
       }
       if (typeof value !== 'string') return { item, value };
       if (value.toLowerCase() === 'null') return { item, value: null };

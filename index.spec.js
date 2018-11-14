@@ -3,7 +3,8 @@ const loader = require('./index').bind({
   query: {
     defaults: {
       CUSTOM_VAR: 'default-value'
-    }
+    },
+    filter: (name, value) => name !== 'IGNORE_NAME' && value !== 'ignore-me'
   }
 });
 
@@ -85,4 +86,14 @@ it('Should use a default value when it is missing in ENV', () => {
 it('Should ignore default value when a value is in ENV', () => {
   process.env.CUSTOM_VAR = 'abc';
   expect(loader('process.env.CUSTOM_VAR')).toBe('"abc"');
+});
+
+it('Should ignore variable based on ignore function (name)', () => {
+  process.env.IGNORE_NAME = 'abc';
+  expect(loader('process.env.IGNORE_NAME')).toBe('process.env.IGNORE_NAME');
+});
+
+it('Should ignore variable based on ignore function (value)', () => {
+  process.env.VAR1 = 'ignore-me';
+  expect(loader('process.env.VAR1')).toBe('process.env.VAR1');
 });

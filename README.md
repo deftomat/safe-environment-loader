@@ -40,7 +40,10 @@ A missing values required by `environment.js` will cause build errors.
 
 ## Loader options
 
-You can provide a default values, which will be used when environment value is missing:
+You can optionally provide the filter function and default values.
+
+- Default values will be used when environment value is missing.
+- Filter function works like classic `filter` function in JS. It receives variable name and value and returns false when substitution needs to be ignored.
 
 ```js
 {
@@ -50,12 +53,13 @@ You can provide a default values, which will be used when environment value is m
   options: {
     defaults: {
       BUILD_ID: Math.random()
-    }
+    },
+    filter: (name, value) => name !== 'IGNORE_ME'
   }
 }
 ```
 
-**CAUTION**: `process.env.NODE_ENV` is ignored as webpack (since v4) is replacing it by default.
+**CAUTION**: `process.env.NODE_ENV` is always ignored as webpack (since v4) is replacing it by default.
 
 ## Advanced usage
 
