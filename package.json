@@ -1,6 +1,6 @@
 {
   "name": "safe-environment-loader",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Safe environment loader",
   "license": "MIT",
   "author": "Tomas Szabo <tomas.szabo@deftomat.com>",
