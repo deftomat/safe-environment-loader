@@ -57,9 +57,8 @@ You can optionally provide the filter function, default values and custom enviro
       BUILD_ID: Math.random()
     },
     filter: (name, value) => name !== 'IGNORE_ME',
-    envResolver: 'env.js'
+    envResolver: 'env.config.js'
   }
-}
 ```
 
 **CAUTION**: `process.env.NODE_ENV` is always ignored as webpack (since v4) is replacing it by default.
