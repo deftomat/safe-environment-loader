@@ -1,3 +1,7 @@
+# 1.2.1
+
+- improve error messages
+
 # 1.2.0
 
 - add `envResolver` option. Plugin will try to find a file specified in `envResolver` and tries to run an exported function to obtain the environment values.
