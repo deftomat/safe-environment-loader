@@ -1,6 +1,7 @@
 const loaderUtils = require('loader-utils');
 const minimist = require('minimist');
 const findUp = require('find-up');
+const path = require('path');
 
 const args = minimist(process.argv.slice(2));
 const commentedCode = /\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm;
@@ -19,7 +20,7 @@ async function loader(source) {
     const result = substituteEnv(source, loadedEnv, options);
     callback(null, result);
   } catch (error) {
-    callback(Error('SAFE-ENVIRONMENT-LOADER: ' + error), null);
+    callback(Error(`[SAFE-ENVIRONMENT-LOADER] ${error.message || error}`), null);
   }
 }
 
@@ -30,12 +31,12 @@ async function tryLoadEnv(resolverFilename, context, addDependency) {
   if (path == null) return {};
 
   addDependency(path);
-  const env = await resolveEnv(path);
+  const env = await resolveEnv(context, path);
   await resolvePromises(env);
   return env;
 }
 
-function resolveEnv(resolverPath) {
+function resolveEnv(context, resolverPath) {
   delete require.cache[resolverPath];
   const resolver = require(resolverPath);
 
@@ -45,7 +46,13 @@ function resolveEnv(resolverPath) {
     return resolver;
   } else {
     throw Error(
-      `Failed to resolve a result from ${resolverPath}! File must exports a plain object or a function.`
+      `Failed to resolve the custom environment resolver!\n\n` +
+        `Resolver must exports a plain object or a function.\n` +
+        `Loader tries to resolve the export of "${path.relative(context, resolverPath)}" file.\n` +
+        `To resolve this issue, you can do one of the following:\n` +
+        `  - Export a plain object or a function which returns it\n` +
+        `  - Update your Webpack config to ignore this file when it is not intended to be an environment resolver\n` +
+        `  - Change the name of the file to something different\n`
     );
   }
 }
@@ -81,7 +88,14 @@ function substituteEnv(source, loadedEnv, { defaults = {}, filter = () => true }
       if (filter(name, value) === false) return { item, value: item };
 
       if (value === undefined) {
-        throw Error(`Environment variable "${name}" is missing!`);
+        throw Error(
+          `Environment variable "${name}" is missing!\n\n` +
+            `Loader tries to replace "process.env.${name}" with the real value. Unfortunatelly, no value was provided.\n` +
+            `To resolve this issue, you can do one of the following:\n` +
+            `  - Provide the value manually in your terminal: "${name}=<value> <your_command>"\n` +
+            `  - Create custom environment resolver (https://bit.ly/2WeCMZg)\n` +
+            `  - Remove "process.env.${name}" if it is not strictly necessary\n`
+        );
       }
       if (typeof value !== 'string') return { item, value };
       if (value.toLowerCase() === 'null') return { item, value: null };
