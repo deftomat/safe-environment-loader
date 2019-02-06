@@ -63,6 +63,8 @@ function resolvePromises(obj) {
   Object.keys(obj).forEach(key => {
     const value = obj[key];
 
+    if (value == null) return;
+
     if (typeof value === 'object' && value.then != null) {
       promises.push(value.then(v => (obj[key] = v)));
     }
@@ -82,21 +84,11 @@ function substituteEnv(source, loadedEnv, { defaults = {}, filter = () => true }
     .filter(item => item !== 'process.env.NODE_ENV')
     .map(item => {
       const name = item.replace('process.env.', '');
-      const value = process.env[name] || loadedEnv[name] || defaults[name];
+      const value = extractValue(name, loadedEnv, defaults);
 
       // Skip substitution when filter function returns false.
       if (filter(name, value) === false) return { item, value: item };
 
-      if (value === undefined) {
-        throw Error(
-          `Environment variable "${name}" is missing!\n\n` +
-            `Loader tries to replace "process.env.${name}" with the real value. Unfortunatelly, no value was provided.\n` +
-            `To resolve this issue, you can do one of the following:\n` +
-            `  - Provide the value manually in your terminal: "${name}=<value> <your_command>"\n` +
-            `  - Create custom environment resolver (https://bit.ly/2WeCMZg)\n` +
-            `  - Remove "process.env.${name}" if it is not strictly necessary\n`
-        );
-      }
       if (typeof value !== 'string') return { item, value };
       if (value.toLowerCase() === 'null') return { item, value: null };
       if (value.toLowerCase() === 'undefined') return { item, value: undefined };
@@ -105,6 +97,21 @@ function substituteEnv(source, loadedEnv, { defaults = {}, filter = () => true }
       return { item, value: Number(value) };
     })
     .reduce((source, { item, value }) => source.replace(item, value), source);
+}
+
+function extractValue(name, loadedEnv, defaults) {
+  if (process.env.hasOwnProperty(name)) return process.env[name];
+  if (loadedEnv.hasOwnProperty(name)) return loadedEnv[name];
+  if (defaults.hasOwnProperty(name)) return defaults[name];
+
+  throw Error(
+    `Environment variable "${name}" is missing!\n\n` +
+      `Loader tries to replace "process.env.${name}" with the real value. Unfortunatelly, no value was provided.\n` +
+      `To resolve this issue, you can do one of the following:\n` +
+      `  - Provide the value manually in your terminal: "${name}=<value> <your_command>"\n` +
+      `  - Create custom environment resolver (https://bit.ly/2WeCMZg)\n` +
+      `  - Remove "process.env.${name}" if it is not strictly necessary\n`
+  );
 }
 
 module.exports = loader;
