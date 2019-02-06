@@ -1,3 +1,7 @@
+# 1.2.2
+
+- support `null`, `undefined`, `false` values
+
 # 1.2.1
 
 - improve error messages
