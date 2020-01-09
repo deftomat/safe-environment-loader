@@ -1,0 +1,16 @@
+{
+  "extends": "@deftomat/opinionated/configs/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "lib": ["ES2019"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "declaration": true,
+    "sourceMap": false,
+    "inlineSources": false,
+    "target": "ES2019",
+    "outDir": "./dist"
+  },
+  "exclude": ["node_modules", "./dist"]
+}

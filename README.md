@@ -1,7 +1,7 @@
 # Safe environment loader
 
 Webpack loader which replaces `process.env.<ANYTHING>` with environment value.
-Missing environment values will cause a build error.
+Missing environment values will cause the build error.
 
 ## Why?
 
@@ -15,7 +15,7 @@ npm install safe-environment-loader --save-dev
 
 ## Usage
 
-Add rule to your webpack config:
+Add rule into your webpack config:
 
 ```js
 {
@@ -36,16 +36,25 @@ export default {
 
 Build your application: `STAGE=e2e; BUILD_ID=123 webpack -p`.
 
-A missing values required by `environment.js` will cause build errors.
+Any missing values required by `environment.js` will cause build error.
 
 ## Loader options
 
-You can optionally provide the filter function, default values and custom environment resolver.
+Optionally, you can provide the custom environment resolver and filter function.
 
-- Environment resolver is the JavaScript file, which can export environment values. You can specify a filename and
-  loader will try to find the first file in all parent directories starting from Webpack's context.
-- Default values will be used when environment value is missing.
-- Filter function works like classic `filter` function in JS. It receives variable name and value and returns false when substitution needs to be ignored.
+Environment resolver is a function, which will return the following object or a promise, which resolves into that object:
+
+```ts
+{
+  interface ResolverOutput {
+    values?: Record<string, any>;
+    error?: Error;
+    files?: string[];
+  }
+}
+```
+
+Filter function works like classic `filter` function in JS. It receives variable name and value and returns false when substitution needs to be ignored.
 
 ```js
 {
@@ -53,37 +62,67 @@ You can optionally provide the filter function, default values and custom enviro
   test: /environment\.js/,
   loader: 'safe-environment-loader',
   options: {
-    defaults: {
-      BUILD_ID: Math.random()
-    },
     filter: (name, value) => name !== 'IGNORE_ME',
-    envResolver: 'env.config.js'
+    envResolver: () => ({
+      values: {
+        BUILD_ID: Math.random(),
+      }
+    })
   }
 ```
 
 **CAUTION**: `process.env.NODE_ENV` is always ignored as webpack (since v4) is replacing it by default.
 
-## Environment resolver
+## Advanced environment resolver
 
-A simple JavaScript file which needs to export a plain object or function.
-When an exported object is a function, then loader will call it with the parsed process arguments. Also, the returned Promise will be awaited.
+Environment resolver can implement any complex logic, for example, you can create JS file, which is able to generate ENV values on demand and share it between multiple build processes.
+
+Unfortunately, any changes in that file will be ignored until you restart the Webpack.
+
+To fix that, you can return additional `files` property to let Webpack know, which files needs to be watched and if any of them change, `envResolver` will be evaluated again.
 
 ```js
-module.exports = function({ args }) {
-  return {
-    API_URL: args.stage === 'prod' ? 'app.io/api' : 'localhost:3100'
-  };
-};
+// env.config.js
+
+const stage = process.argv[2];
+
+module.exports = () => ({
+  API_URL: stage === 'prod' ? 'app.io/api' : 'localhost:3100'
+});
 ```
 
-> 💡 Resolver file is automatically added into watched files and it is resolved each time it changes or a file specified in `loader.test` changes.
+```js
+// webpack.config.js
+
+{
+  enforce: 'post',
+  test: /environment\.js/,
+  loader: 'safe-environment-loader',
+  options: {
+    envResolver: () => {
+      const resolverFile = require.resolve(`./env.config.js`);
+      delete require.cache[resolverFile];
+      const config = require(resolverFile)
+
+      try {
+        return { values: config(), files: [resolverFile]}
+      } catch (error) {
+        // We want to recover from any error on next change in `env.config.js`.
+        // So, we need to pass `files` even when config evaluation fails.
+        return { error, files: [resolverFile] }
+      }
+    }
+  }
+```
+
+With this configuration, Webpack will watch `env.config.js` for any changes
+and re-evaluate it when `env.config.js` or `environment.js` file change.
 
 ## Environment value resolution order
 
 1. check `process.env`
 2. check `envResolver` result
-3. check `defaults` object
-4. throws _Missing ENV variable_ error
+3. throws _Missing ENV variable_ error
 
 According to this resolution order, you can **ALWAYS** override ENV value by providing it in your terminal: `STAGE=dev webpack -p`
 

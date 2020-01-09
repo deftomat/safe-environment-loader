@@ -1,3 +1,8 @@
+# 2.0.0
+
+- BREAKING: `envResolver` is now the plain function instead of a filename
+- BREAKING: requires Node 12
+
 # 1.2.2
 
 - support `null`, `undefined`, `false` values
