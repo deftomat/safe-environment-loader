@@ -29,6 +29,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "devDependencies": {
     "@deftomat/opinionated": "^0.5.8",
     "husky": "^4.0.3",
