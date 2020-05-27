@@ -1,6 +1,6 @@
 import { getOptions } from 'loader-utils';
 
-const commentedCode = /\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm;
+const commentedCode = /\/\*[\s\S]*?\*\/|\/\/[^\n\r]+?(?:\*\)|[\n\r])/gm;
 const envVariable = /process\.env\.([a-z0-9_]*)/gi;
 const resourceDependencies = new Map<string, string[]>();
 

@@ -1,3 +1,7 @@
+# 2.0.1
+
+- fix: code comments match
+
 # 2.0.0
 
 - BREAKING: `envResolver` is now the plain function instead of a filename
